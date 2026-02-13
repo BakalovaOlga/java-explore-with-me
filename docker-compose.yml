@@ -8,6 +8,12 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d stats"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   stats-server:
     build: ./stat-service/stat-server
@@ -19,8 +25,9 @@ services:
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: password
     depends_on:
-      - stats-db
-
+      stats-db:
+        condition: service_healthy
+    restart: unless-stopped
 
   main-db:
     image: postgres:13
@@ -31,6 +38,12 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d ewm"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   ewm-service:
     build: ./main-service
@@ -43,5 +56,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       CLIENT_URL: http://stats-server:9090
     depends_on:
-      - stats-server
-      - main-db
+      stats-server:
+        condition: service_started
+      main-db:
+        condition: service_healthy
