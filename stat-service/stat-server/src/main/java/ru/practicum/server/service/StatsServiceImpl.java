@@ -1,7 +1,9 @@
 package ru.practicum.server.service;
 
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.server.exceptions.ValidationException;
@@ -22,12 +24,14 @@ public class StatsServiceImpl implements StatsService {
     private final EndpointHitMapper hitMapper;
 
     @Override
+    @Transactional
     public void saveHit(EndpointHitDto endpointHitDto) {
         EndpointHit hit = hitMapper.toEntity(endpointHitDto);
         statsRepository.save(hit);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ViewStatsDto> getStats(String start, String end, List<String> uris, Boolean unique) {
         LocalDateTime startTime = LocalDateTime.parse(start, FORMATTER);
         LocalDateTime endTime = LocalDateTime.parse(end, FORMATTER);

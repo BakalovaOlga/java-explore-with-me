@@ -20,7 +20,7 @@ public class RestStatsClient implements StatsClient {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final RestClient restClient;
 
-    public RestStatsClient(@Value("${stat-server.url:http://localhost:9090}") String statsServiceUrl) {
+    public RestStatsClient(@Value("${CLIENT_URL:http://localhost:9090}") String statsServiceUrl) {
         this.restClient = RestClient.builder()
                 .baseUrl(statsServiceUrl)
                 .defaultHeader("Content-Type", "application/json")

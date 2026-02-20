@@ -36,6 +36,9 @@ services:
       POSTGRES_DB: ewm
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+      POSTGRES_ENCODING: UTF8
+      LC_COLLATE: en_US.utf8
+      LC_CTYPE: en_US.utf8
     ports:
       - "5433:5432"
     healthcheck:
