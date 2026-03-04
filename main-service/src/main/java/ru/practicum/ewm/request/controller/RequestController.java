@@ -67,9 +67,4 @@ public class RequestController {
                 userId, eventId, updateRequest);
         return requestService.updateRequestStatus(userId, eventId, updateRequest);
     }
-
-    @GetMapping("/test")
-    public String test() {
-        return "Controller is working!";
-    }
 }

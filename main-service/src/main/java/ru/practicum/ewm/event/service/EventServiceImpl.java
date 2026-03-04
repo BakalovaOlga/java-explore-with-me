@@ -15,6 +15,8 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.service.CategoryService;
+import ru.practicum.ewm.comment.dto.CommentDto;
+import ru.practicum.ewm.comment.service.CommentService;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
@@ -52,6 +54,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryService categoryService;
     private final RequestService requestService;
     private final StatsClient statsClient;
+    private final CommentService commentService;
 
     @Override
     public List<EventShortDto> getUserEvents(Long userId, Integer from, Integer size) {
@@ -70,8 +73,9 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(events);
         Map<Long, Long> viewsMap = getEventsViewsBatch(events);
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(events);
 
-        return eventMapper.toShortDto(events, confirmedRequestsMap, viewsMap);
+        return eventMapper.toShortDto(events, confirmedRequestsMap, viewsMap, commentsCountMap);
     }
 
     @Override
@@ -93,7 +97,7 @@ public class EventServiceImpl implements EventService {
         Event savedEvent = eventRepository.save(event);
         log.info("Событие создано: id={}", savedEvent.getId());
 
-        return eventMapper.toFullDto(savedEvent, 0L, 0L);
+        return eventMapper.toFullDto(savedEvent, 0L, 0L, 0L);
     }
 
     @Override
@@ -108,8 +112,9 @@ public class EventServiceImpl implements EventService {
 
         Long confirmedRequests = requestService.countConfirmedRequests(eventId);
         Long views = getEventViews(event);
+        Long commentsCount = commentService.countCommentsByEventId(eventId);
 
-        return eventMapper.toFullDto(event, confirmedRequests, views);
+        return eventMapper.toFullDto(event, 0L, 0L, 0L);
     }
 
     @Override
@@ -152,8 +157,9 @@ public class EventServiceImpl implements EventService {
 
         Long confirmedRequests = requestService.countConfirmedRequests(eventId);
         Long views = getEventViews(updatedEvent);
+        Long commentsCount = commentService.countCommentsByEventId(eventId);
 
-        return eventMapper.toFullDto(updatedEvent, confirmedRequests, views);
+        return eventMapper.toFullDto(updatedEvent, confirmedRequests, views, commentsCount);
     }
 
     //Админ
@@ -191,8 +197,9 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(events);
         Map<Long, Long> viewsMap = getEventsViewsBatch(events);
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(events);
 
-        return eventMapper.toFullDto(events, confirmedRequestsMap, viewsMap);
+        return eventMapper.toFullDto(events, confirmedRequestsMap, viewsMap, commentsCountMap);
     }
 
     @Override
@@ -224,8 +231,9 @@ public class EventServiceImpl implements EventService {
 
         Long confirmedRequests = requestService.countConfirmedRequests(eventId);
         Long views = getEventViews(updatedEvent);
+        Long commentsCount = commentService.countCommentsByEventId(eventId);
 
-        return eventMapper.toFullDto(updatedEvent, confirmedRequests, views);
+        return eventMapper.toFullDto(updatedEvent, confirmedRequests, views, commentsCount);
     }
 
     //Public
@@ -277,11 +285,13 @@ public class EventServiceImpl implements EventService {
 
         Long confirmedRequests = requestService.countConfirmedRequests(eventId);
         Long views = getEventViews(event);
+        Long commentsCount = commentService.countCommentsByEventId(eventId);
+        List<CommentDto> recentComments = commentService.getRecentCommentsByEventId(eventId, 5);
 
         log.info("Событие {} успешно получено, просмотров: {}, подтверждено: {}",
                 eventId, views, confirmedRequests);
 
-        return eventMapper.toFullDto(event, confirmedRequests, views);
+        return eventMapper.toFullDto(event, confirmedRequests, views, commentsCount, recentComments);
     }
 
 
@@ -631,8 +641,9 @@ public class EventServiceImpl implements EventService {
     private List<EventShortDto> enrichEventsWithStats(List<Event> events) {
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(events);
         Map<Long, Long> viewsMap = getEventsViewsBatch(events);
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(events);
 
-        return eventMapper.toShortDto(events, confirmedRequestsMap, viewsMap);
+        return eventMapper.toShortDto(events, confirmedRequestsMap, viewsMap, commentsCountMap);
     }
 
     private List<EventShortDto> applyPagination(List<EventShortDto> dtos, Integer from, Integer size) {
@@ -641,5 +652,17 @@ public class EventServiceImpl implements EventService {
         }
         int toIndex = Math.min(from + size, dtos.size());
         return dtos.subList(from, toIndex);
+    }
+
+    private Map<Long, Long> getCommentsCountMap(List<Event> events) {
+        if (events.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+
+        return commentService.countCommentsForEvents(eventIds);
     }
 }

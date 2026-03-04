@@ -8,11 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ewm.comment.dto.CommentDto;
+import ru.practicum.ewm.comment.service.CommentService;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.service.EventService;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -23,6 +26,7 @@ import java.util.List;
 public class PublicEventController {
 
     private final EventService eventService;
+    private final CommentService commentService;
 
     @GetMapping
     public List<EventShortDto> getEventsPublic(
@@ -49,10 +53,19 @@ public class PublicEventController {
     @GetMapping("/{id}")
     public EventFullDto getEventPublic(
             @PathVariable @Positive Long id,
-            HttpServletRequest request
-    ) {
+            HttpServletRequest request) {
         log.info("Public GET /events/{}: ip={}, uri={}", id, request.getRemoteAddr(), request.getRequestURI());
 
         return eventService.getEventPublic(id, request);
+    }
+
+    @GetMapping("/{eventId}/comments")
+    public Collection<CommentDto> getEventComments(
+            @PathVariable Long eventId,
+            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+            @RequestParam(defaultValue = "10") @Positive int size) {
+        log.info("Public GET /events/{}/comments: from={}, size={}", eventId, from, size);
+
+        return commentService.getCommentsByEventId(eventId, from, size);
     }
 }
