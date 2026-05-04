@@ -18,11 +18,15 @@ public class EventShortDto {
     private Long id;
     private String annotation;
     private CategoryDto category;
-    private Long confirmedRequests;
+    @Builder.Default
+    private Long confirmedRequests = 0L;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     private UserShortDto initiator;
     private Boolean paid;
     private String title;
-    private Long views;
+    @Builder.Default
+    private Long views = 0L;
+    @Builder.Default
+    private Long commentsCount = 0L;
 }

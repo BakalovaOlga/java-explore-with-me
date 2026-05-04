@@ -24,6 +24,7 @@ public interface CompilationMapper {
     default CompilationDto toDtoWithStats(Compilation compilation,
                                           Map<Long, Long> confirmedRequestsMap,
                                           Map<Long, Long> viewsMap,
+                                          Map<Long, Long> commentsCountMap,
                                           EventMapper eventMapper) {
         CompilationDto dto = toDto(compilation);
 
@@ -33,7 +34,8 @@ public interface CompilationMapper {
             List<EventShortDto> eventDtos = eventMapper.toShortDto(
                     eventsList,
                     confirmedRequestsMap,
-                    viewsMap
+                    viewsMap,
+                    commentsCountMap
             );
 
             dto.setEvents(new HashSet<>(eventDtos));

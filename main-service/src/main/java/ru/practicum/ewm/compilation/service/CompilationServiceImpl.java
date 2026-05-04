@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.comment.service.CommentService;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
@@ -34,6 +35,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventService eventService;
     private final EventMapper eventMapper;
     private final RequestService requestService;
+    private final CommentService commentService;
 
     @Override
     @Transactional
@@ -65,8 +67,16 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(savedCompilation.getEvents());
         Map<Long, Long> viewsMap = getEventsViewsMap(savedCompilation.getEvents());
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(savedCompilation.getEvents());
 
-        return compilationMapper.toDtoWithStats(savedCompilation, confirmedRequestsMap, viewsMap, eventMapper);
+
+        return compilationMapper.toDtoWithStats(
+                savedCompilation,
+                confirmedRequestsMap,
+                viewsMap,
+                commentsCountMap,
+                eventMapper
+        );
     }
 
     @Override
@@ -111,8 +121,15 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(updatedCompilation.getEvents());
         Map<Long, Long> viewsMap = getEventsViewsMap(updatedCompilation.getEvents());
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(updatedCompilation.getEvents());
 
-        return compilationMapper.toDtoWithStats(updatedCompilation, confirmedRequestsMap, viewsMap, eventMapper);
+        return compilationMapper.toDtoWithStats(
+                updatedCompilation,
+                confirmedRequestsMap,
+                viewsMap,
+                commentsCountMap,
+                eventMapper
+        );
     }
 
     @Override
@@ -141,10 +158,15 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(allEvents);
         Map<Long, Long> viewsMap = getEventsViewsMap(allEvents);
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(allEvents);
 
         return compilations.stream()
                 .map(compilation -> compilationMapper.toDtoWithStats(
-                        compilation, confirmedRequestsMap, viewsMap, eventMapper))
+                        compilation,
+                        confirmedRequestsMap,
+                        viewsMap,
+                        commentsCountMap,
+                        eventMapper))
                 .collect(Collectors.toList());
     }
 
@@ -157,8 +179,16 @@ public class CompilationServiceImpl implements CompilationService {
 
         Map<Long, Long> confirmedRequestsMap = getConfirmedRequestsMap(compilation.getEvents());
         Map<Long, Long> viewsMap = getEventsViewsMap(compilation.getEvents());
+        Map<Long, Long> commentsCountMap = getCommentsCountMap(compilation.getEvents());
 
-        return compilationMapper.toDtoWithStats(compilation, confirmedRequestsMap, viewsMap, eventMapper);
+
+        return compilationMapper.toDtoWithStats(
+                compilation,
+                confirmedRequestsMap,
+                viewsMap,
+                commentsCountMap,
+                eventMapper
+        );
     }
 
     private Map<Long, Long> getConfirmedRequestsMap(Set<Event> events) {
@@ -184,4 +214,17 @@ public class CompilationServiceImpl implements CompilationService {
 
         return eventService.getViewsForEvents(eventIds);
     }
+
+    private Map<Long, Long> getCommentsCountMap(Set<Event> events) {
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+
+        return commentService.countCommentsForEvents(eventIds);
+    }
+
 }

@@ -6,11 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.category.dto.CategoryDto;
+import ru.practicum.ewm.comment.dto.CommentDto;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.model.Location;
 import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -36,4 +39,8 @@ public class EventFullDto {
     private String title;
     @Builder.Default
     private Long views = 0L;
+    @Builder.Default
+    private Long commentsCount = 0L;
+    @Builder.Default
+    private List<CommentDto> recentComments = new ArrayList<>();
 }
